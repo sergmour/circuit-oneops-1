@@ -5,6 +5,7 @@ class Cloud
 end
 
 module McrouterRouteConfig
+  FAULT_DOMAIN_INFIX="FaultDomain"
 
   def self.get_mcrouter_cloud_config(node)
     if !node.workorder.has_key?("cloud")
