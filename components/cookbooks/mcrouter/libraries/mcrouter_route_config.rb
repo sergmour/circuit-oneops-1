@@ -25,7 +25,7 @@ module McrouterRouteConfig
     }
 
     current_cloud_id   = node.workorder.cloud['ciId']
-    current_cloud_id = exec_availability_zones(current_cloud_id, (node.workorder.payLoad.has_key?("ManagedVia") ? node.workorder.payLoad.ManagedVia[0] : nil))
+    current_cloud_id = exec_zone(current_cloud_id, (node.workorder.payLoad.has_key?("ManagedVia") ? node.workorder.payLoad.ManagedVia[0] : nil))
 
     cloud_dc = cloud_dc(node)
     cloud_computes = cloud_computes(node)
@@ -86,12 +86,12 @@ module McrouterRouteConfig
     })
   end
 
-  def self.exec_availability_zones(cloud_id, compute)
+  def self.exec_zone(cloud_id, compute)
     if @@pool_group_by == "CloudFaultDomain"
-      availability_zones = get_availability_zones(compute)
-      if !availability_zones.nil?
-        if availability_zones.has_key?("fault_domain")
-          cloud_id = availability_zones ? "#{cloud_id}#{McrouterRouteConfig::FAULT_DOMAIN_INFIX}#{availability_zones['fault_domain']}" : cloud_id
+      zone = get_zone(compute)
+      if !zone.nil?
+        if zone.has_key?("fault_domain")
+          cloud_id = zone ? "#{cloud_id}#{McrouterRouteConfig::FAULT_DOMAIN_INFIX}#{zone['fault_domain']}" : cloud_id
         end
       end
     end
@@ -119,7 +119,7 @@ module McrouterRouteConfig
       next if compute[:ciAttributes][:public_ip].nil? || compute[:ciAttributes][:public_ip].empty?
 
       cloud_id = compute[:ciName].split('-').reverse[1]
-      cloud_id_with_zones = exec_availability_zones(cloud_id, compute)
+      cloud_id_with_zones = exec_zone(cloud_id, compute)
       cloud_id = cloud_id_with_zones.nil? ? cloud_id : cloud_id_with_zones
 
       computeList = cloud_computes[cloud_id]
@@ -132,12 +132,14 @@ module McrouterRouteConfig
     cloud_computes
   end
 
-  def self.get_availability_zones(compute)
-    availability_zones=nil
-    if (!compute.nil? && compute[:ciAttributes].has_key?('availability_zones') && (!compute[:ciAttributes][:availability_zones].nil? || !compute[:ciAttributes][:availability_zones].empty?))
-      availability_zones=JSON.parse(compute[:ciAttributes][:availability_zones])
+  def self.get_zone(compute)
+    zone=nil
+    if (!compute.nil? && (compute[:ciBaseAttributes].has_key?('zone') && (!compute[:ciBaseAttributes][:zone].nil? && compute[:ciBaseAttributes][:zone].size > 2)))
+      zone=JSON.parse(compute[:ciBaseAttributes][:zone])
+    elsif (compute[:ciAttributes].has_key?('zone') && (!compute[:ciAttributes][:zone].nil? || compute[:ciAttributes][:zone].size >2 ))
+      zone=JSON.parse(compute[:ciAttributes][:zone])
     end
-    availability_zones
+    zone
   end
 
   def self.build_routes(cloud_pools)
