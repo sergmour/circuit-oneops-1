@@ -134,9 +134,9 @@ module McrouterRouteConfig
 
   def self.get_zone(compute)
     zone=nil
-    if (!compute.nil? && (compute[:ciBaseAttributes].has_key?('zone') && (!compute[:ciBaseAttributes][:zone].nil? && compute[:ciBaseAttributes][:zone].size > 2)))
+    if (!compute.nil? && compute[:ciBaseAttributes].has_key?('zone') && !compute[:ciBaseAttributes][:zone].nil? && compute[:ciBaseAttributes][:zone].size > 2)
       zone=JSON.parse(compute[:ciBaseAttributes][:zone])
-    elsif (compute[:ciAttributes].has_key?('zone') && (!compute[:ciAttributes][:zone].nil? || compute[:ciAttributes][:zone].size >2 ))
+    elsif (!compute.nil? && compute[:ciAttributes].has_key?('zone') && !compute[:ciAttributes][:zone].nil? && compute[:ciAttributes][:zone].size > 2)
       zone=JSON.parse(compute[:ciAttributes][:zone])
     end
     zone
